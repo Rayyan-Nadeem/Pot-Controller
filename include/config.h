@@ -5,7 +5,11 @@
 const char* ssid = "UMBC Visitor";
 const char* password = "";
 
-// Backend URL (IP address or domain of your server)
-const char* serverUrl = "http://10.200.131.110:6000/api/board";
+// MQTT broker details
+const char* mqttServer = "10.200.131.110";
+const int mqttPort = 1883;
+
+// Baud rate for Serial communication
+const int baudRate = 9600;
 
 #endif // CONFIG_H

@@ -1,69 +1,97 @@
 #include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
-#include "config.h"  // Include the config file
+#include <PubSubClient.h>
+#include "config.h"  // Include Wi-Fi and MQTT configuration from your config.h file
 
-int ledPin = 13; // Define the LED pin
+WiFiClient espClient;
+PubSubClient client(espClient);
 
-unsigned long previousMillis = 0; // Store the last time the GET request was made
-const long interval = 10000; // Interval for sending the GET request (10 seconds)
+int ledPin = D4;  // LED pin on NodeMCU
 
-WiFiClient client; // Create a WiFiClient object
+// Function prototypes
+void mqttCallback(char* topic, byte* payload, unsigned int length);
+void blinkLED(int times);
+void reconnectWiFi();
+void reconnectMQTT();
 
 void setup() {
+  Serial.begin(baudRate);
   pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW); // Turn the LED off initially
+  digitalWrite(ledPin, LOW);  // LED off initially
 
-  Serial.begin(9600);
-  Serial.println();
-  Serial.print("Connecting to WiFi: ");
-  Serial.println(ssid);
+  reconnectWiFi();  // Connect to Wi-Fi
+  reconnectMQTT();  // Connect to the MQTT broker
+}
 
+void loop() {
+
+
+  if (!client.connected()) {
+    reconnectMQTT();  // Reconnect to MQTT if disconnected
+  }
+  client.loop();  // Ensure MQTT messages are processed
+}
+
+// Function to reconnect to Wi-Fi
+void reconnectWiFi() {
+  Serial.println("Connecting to WiFi...");
   WiFi.begin(ssid, password);
 
-  Serial.print("Connecting");
-
-  // Wait until the NodeMCU is connected to the Wi-Fi network
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
 
-  digitalWrite(ledPin, HIGH); // Turn the LED on when connected
   Serial.println();
-  Serial.println("WiFi Connected Successfully!");
-  Serial.print("NodeMCU IP Address: ");
+  Serial.println("WiFi Connected!");
+  Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
 }
 
-void loop() {
-  // Check if 10 seconds have passed
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis; // Update the last time we sent the GET request
-
-    // Check if Wi-Fi is still connected
-    if (WiFi.status() == WL_CONNECTED) {
-      HTTPClient http;  // Create an HTTPClient object
-
-      // Specify the URL for the HTTP GET request, using WiFiClient object
-      http.begin(client, serverUrl);
-
-      // Send the HTTP GET request
-      int httpCode = http.GET();
-
-      // Check for a successful response
-      if (httpCode > 0) {
-        // HTTP response code is successful
-        String payload = http.getString(); // Get the response payload
-        Serial.println("Response from server:");
-        Serial.println(payload); // Print the response to the Serial Monitor
-      } else {
-        Serial.println("Error on HTTP request"); // In case of an error
-      }
-
-      http.end(); // Close the connection
+// Function to reconnect to MQTT broker
+void reconnectMQTT() {
+  while (!client.connected()) {
+    Serial.println("Connecting to MQTT...");
+    
+    // Attempt to connect to the MQTT broker
+    if (client.connect("NodeMCUClient")) {
+      Serial.println("Connected to MQTT");
+      client.subscribe("nodeMCU/blink");
     } else {
-      Serial.println("WiFi not connected");
+      Serial.print("NodeMCU IP Address: ");
+      Serial.println(WiFi.localIP());
+      Serial.print("Failed to connect to MQTT, rc=");
+      Serial.print(client.state());  // Print connection state for better debugging
+      Serial.println(". Trying again in 5 seconds...");
+      delay(5000);  // Wait before retrying
     }
+  }
+}
+
+
+// Callback function to handle incoming MQTT messages
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  String message;
+  for (unsigned int i = 0; i < length; i++) {
+    message += (char)payload[i];
+  }
+
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  Serial.println(message);
+
+  // Check if the message is "blink" and blink the LED
+  if (String(topic) == "nodeMCU/blink" && message == "blink") {
+    blinkLED(3);
+  }
+}
+
+// Function to blink the LED
+void blinkLED(int times) {
+  for (int i = 0; i < times; i++) {
+    digitalWrite(ledPin, HIGH);  // Turn LED on
+    delay(500);                  // Wait 500ms
+    digitalWrite(ledPin, LOW);   // Turn LED off
+    delay(500);                  // Wait 500ms
   }
 }
