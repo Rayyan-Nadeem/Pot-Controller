@@ -6,7 +6,7 @@ const char* ssid = "UMBC Visitor";
 const char* password = "";
 
 // MQTT broker details
-const char* mqttServer = "10.200.131.110";
+const char* mqttServer = "10.200.12.179";
 const int mqttPort = 1883;
 
 // Baud rate for Serial communication

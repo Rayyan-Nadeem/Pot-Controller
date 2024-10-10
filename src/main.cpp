@@ -17,6 +17,7 @@ void setup() {
   Serial.begin(baudRate);
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);  // LED off initially
+  client.setServer(mqttServer, mqttPort);
 
   reconnectWiFi();  // Connect to Wi-Fi
   reconnectMQTT();  // Connect to the MQTT broker
