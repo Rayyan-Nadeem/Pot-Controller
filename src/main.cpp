@@ -1,12 +1,8 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-
-const char* ssid = "UMBC Visitor";       // your network SSID
-const char* password = ""; // your network password
+#include "config.h"  // Include the config file
 
 int ledPin = 13; // Define the LED pin
-
-const char* serverUrl = "http://10.200.131.110:6000/api/board"; // Backend URL
 
 unsigned long previousMillis = 0; // Store the last time the GET request was made
 const long interval = 10000; // Interval for sending the GET request (10 seconds)
