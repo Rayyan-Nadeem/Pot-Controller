@@ -1,28 +1,31 @@
 #include <Arduino.h>
 
-// put function declarations here:
-// Define the LED pin
-int ledPin = 13;
+// Define the LED pin (D4 on NodeMCU corresponds to GPIO 2)
+int ledPin = D4;
 
 void setup() {
-  // Initialize the digital pin as an output
+  // Initialize serial communication at 9600 baud
   Serial.begin(9600);
-  
-  }
+
+  // Set the LED pin as output
+  pinMode(ledPin, OUTPUT);
+
+  // Initially turn off the LED
+  digitalWrite(ledPin, LOW);
+}
 
 void loop() {
-  // // Turn the LED on (HIGH is the voltage level)
-  // digitalWrite(ledPin, HIGH);
-  // // Wait for 1 second
-  // delay(1000);
-  // // Turn the LED off by making the voltage LOW
-  // digitalWrite(ledPin, LOW);
-  // // Wait for 1 second
-  // delay(1000);
+  // Turn the LED on (active LOW)
+  digitalWrite(ledPin, LOW); 
+  // Print "Hello" to the serial monitor
+  Serial.println("Hello");
+  // Wait for a second
+  delay(1000);
 
-  int Moisture = analogRead(A0);
-  Serial.print("level: ");
-  Serial.println(Moisture);
-  delay(200);
-
+  // Turn the LED off
+  digitalWrite(ledPin, HIGH);
+  // Print "Hello" again
+  Serial.println("Hello");
+  // Wait for a second
+  delay(1000);
 }
